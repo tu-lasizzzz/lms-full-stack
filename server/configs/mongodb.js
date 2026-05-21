@@ -1,12 +1,16 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
+import dns from 'node:dns';
 
-// Connect to the MongoDB database
+// Force Node to use IPv4 lookup first - fixes Vercel's ENOTFOUND issue
+dns.setDefaultResultOrder('ipv4first');
+
 const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("MongoDB Connected Successfully");
+  } catch (error) {
+    console.error("Database connection failed:", error);
+  }
+};
 
-    mongoose.connection.on('connected', () => console.log('Database Connected'))
-
-    await mongoose.connect(`${process.env.MONGODB_URI}/lms`)
-
-}
-
-export default connectDB
+export default connectDB;
