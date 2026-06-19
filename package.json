@@ -1,5 +1,15 @@
 {
+  "name": "lms-full-stack",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm run dev --prefix client",
+    "server": "npm run server --prefix server",
+    "both": "concurrently \"npm run dev --prefix client\" \"npm run server --prefix server\""
+  },
   "dependencies": {
     "mongodb": "^7.2.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

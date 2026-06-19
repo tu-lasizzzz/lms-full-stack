@@ -32,7 +32,8 @@ const courseSchema = new mongoose.Schema({
     courseRatings: [
         {
             userId: { type: String },
-            rating: { type: Number, min: 1, max: 5 }
+            rating: { type: Number, min: 1, max: 5 },
+            review: { type: String }
         }
     ],
     enrolledStudents: [
@@ -41,6 +42,9 @@ const courseSchema = new mongoose.Schema({
             ref: 'User'
         }
     ],
+    category: { type: String, default: 'Uncategorized' },
+    level: { type: String, default: 'Beginner' },
+    isSeedData: { type: Boolean, default: false }
 }, { timestamps: true, minimize: false });
 
 const Course = mongoose.model('Course', courseSchema);

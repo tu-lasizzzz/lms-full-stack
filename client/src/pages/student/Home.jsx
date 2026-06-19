@@ -7,7 +7,7 @@ import TestimonialsSection from '../../components/student/TestimonialsSection';
 import CallToAction from '../../components/student/CallToAction';
 
 const Home = () => {
-
+  console.log("BACKEND URL IS:", import.meta.env.VITE_BACKEND_URL);
   return (
     <div className="flex flex-col items-center space-y-7 text-center">
       <Hero />

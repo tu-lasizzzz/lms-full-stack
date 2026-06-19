@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { AppContext } from '../../context/AppContext'
-import YouTube from 'react-youtube';
 import { assets } from '../../assets/assets';
 import { useParams } from 'react-router-dom';
 import humanizeDuration from 'humanize-duration';
@@ -124,6 +123,18 @@ const Player = ({ }) => {
 
   }, [])
 
+  // Calculate iframe URL if it's a YouTube link
+  let iframeUrl = playerData ? playerData.lectureUrl : "";
+  if (playerData && playerData.lectureUrl) {
+    if (playerData.lectureUrl.includes("youtube.com/watch")) {
+      const urlParams = new URLSearchParams(playerData.lectureUrl.split('?')[1]);
+      const videoId = urlParams.get("v");
+      iframeUrl = `https://www.youtube.com/embed/${videoId}`;
+    } else if (playerData.lectureUrl.includes("youtu.be/")) {
+      iframeUrl = playerData.lectureUrl.replace("youtu.be/", "youtube.com/embed/");
+    }
+  }
+
   return courseData ? (
     <>
     
@@ -176,7 +187,11 @@ const Player = ({ }) => {
           playerData
             ? (
               <div>
-                <YouTube iframeClassName='w-full aspect-video' videoId={playerData.lectureUrl.split('/').pop()} />
+                {playerData.lectureUrl && playerData.lectureUrl.includes('youtu') ? (
+                  <iframe width="100%" height="100%" className='w-full aspect-video' src={iframeUrl} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen></iframe>
+                ) : (
+                  <video className='w-full aspect-video' controls autoPlay src={playerData.lectureUrl}></video>
+                )}
                 <div className='flex justify-between items-center mt-1'>
                   <p className='text-xl '>{playerData.chapter}.{playerData.lecture} {playerData.lectureTitle}</p>
                   <button onClick={() => markLectureAsCompleted(playerData.lectureId)} className='text-blue-600'>{progressData && progressData.lectureCompleted.includes(playerData.lectureId) ? 'Completed' : 'Mark Complete'}</button>

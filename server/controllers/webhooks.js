@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import stripe from "stripe";
 import { Purchase } from "../models/Purchase.js";
 import Course from "../models/Course.js";
+import { Notification } from "../models/Notification.js";
 
 
 
@@ -35,6 +36,15 @@ export const clerkWebhooks = async (req, res) => {
           resume: ''
         }
         await User.create(userData)
+        
+        // Auto-generate Welcome Notification
+        await Notification.create({
+            userId: data.id,
+            title: "Welcome to LMS TAT 🎉",
+            message: `Welcome to LMS TAT, ${userData.name}! We're excited to have you join our learning community. Explore courses, track your progress, and build new skills at your own pace. Happy Learning!`,
+            type: "welcome"
+        });
+
         res.json({})
         break;
       }
@@ -99,6 +109,7 @@ export const stripeWebhooks = async (request, response) => {
       const purchaseData = await Purchase.findById(purchaseId)
       const userData = await User.findById(purchaseData.userId)
       const courseData = await Course.findById(purchaseData.courseId.toString())
+      const educatorData = await User.findById(courseData.educator)
 
       courseData.enrolledStudents.push(userData)
       await courseData.save()
@@ -108,6 +119,14 @@ export const stripeWebhooks = async (request, response) => {
 
       purchaseData.status = 'completed'
       await purchaseData.save()
+
+      // Auto-generate Enrollment Notification
+      await Notification.create({
+          userId: userData._id,
+          title: "Enrollment Successful 🎓",
+          message: `Congratulations, ${userData.name}! You have successfully enrolled in '${courseData.courseTitle}' by ${educatorData.name}. Start learning, track your progress, and complete the course to earn your certificate.`,
+          type: "enrollment"
+      });
 
       break;
     }

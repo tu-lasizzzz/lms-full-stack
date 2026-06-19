@@ -12,6 +12,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.17.1",
     "axios": "^1.7.8",
+    "firebase": "^12.14.0",
     "humanize-duration": "^3.32.1",
     "quill": "^2.0.3",
     "rc-progress": "^4.0.0",
@@ -21,6 +22,8 @@
     "react-simple-star-rating": "^5.1.7",
     "react-toastify": "^10.0.6",
     "react-youtube": "^10.1.0",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "uniqid": "^5.4.0"
   },
   "devDependencies": {
