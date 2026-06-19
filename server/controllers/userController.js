@@ -3,6 +3,7 @@ import { CourseProgress } from "../models/CourseProgress.js"
 import { Purchase } from "../models/Purchase.js"
 import User from "../models/User.js"
 import stripe from "stripe"
+import { messaging } from "../configs/firebase.js"
 
 
 
@@ -202,5 +203,56 @@ export const addUserRating = async (req, res) => {
         return res.json({ success: true, message: 'Rating added' });
     } catch (error) {
         return res.json({ success: false, message: error.message });
+    }
+};
+
+// Update user FCM Token
+export const updateFcmToken = async (req, res) => {
+    try {
+        const userId = req.auth.userId;
+        const { fcmToken } = req.body;
+
+        const user = await User.findByIdAndUpdate(userId, { fcmToken }, { new: true });
+
+        if (!user) {
+            return res.json({ success: false, message: 'User Not Found' });
+        }
+
+        res.json({ success: true, message: 'FCM Token Updated' });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Send Test Notification
+export const sendTestNotification = async (req, res) => {
+    try {
+        const userId = req.auth.userId;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.json({ success: false, message: 'User Not Found' });
+        }
+
+        if (!user.fcmToken) {
+            return res.json({ success: false, message: 'User has no FCM Token registered' });
+        }
+
+        if (!messaging) {
+            return res.json({ success: false, message: 'Firebase Messaging is not configured on server' });
+        }
+
+        const message = {
+            notification: {
+                title: 'Test Notification',
+                body: 'Hello! This is a test push notification from your LMS application.'
+            },
+            token: user.fcmToken
+        };
+
+        const response = await messaging.send(message);
+        res.json({ success: true, message: 'Notification sent successfully', response });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
     }
 };

@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import humanizeDuration from "humanize-duration";
+import { onMessage } from "firebase/messaging";
+import { getFirebaseMessaging, requestForToken } from "../firebase";
 
 export const AppContext = createContext()
 
@@ -21,6 +23,10 @@ export const AppContextProvider = (props) => {
     const [allCourses, setAllCourses] = useState([])
     const [userData, setUserData] = useState(null)
     const [enrolledCourses, setEnrolledCourses] = useState([])
+
+    // Notifications State
+    const [notifications, setNotifications] = useState([])
+    const [unreadCount, setUnreadCount] = useState(0)
 
     // Fetch All Courses
     const fetchAllCourses = async () => {
@@ -83,6 +89,22 @@ export const AppContextProvider = (props) => {
 
     }
 
+    // Fetch User Notifications
+    const fetchNotifications = async () => {
+        try {
+            const token = await getToken();
+            const { data } = await axios.get(backendUrl + '/api/notifications',
+                { headers: { Authorization: `Bearer ${token}` } })
+
+            if (data.success) {
+                setNotifications(data.notifications)
+                setUnreadCount(data.unreadCount)
+            }
+        } catch (error) {
+            console.error(error.message)
+        }
+    }
+
     // Function to Calculate Course Chapter Time
     const calculateChapterTime = (chapter) => {
 
@@ -137,13 +159,67 @@ export const AppContextProvider = (props) => {
         fetchAllCourses()
     }, [])
 
+    // Send FCM Token to Server
+    const updateUserFcmToken = async (fcmToken) => {
+        try {
+            const token = await getToken();
+            const { data } = await axios.post(
+                backendUrl + '/api/user/update-fcm-token',
+                { fcmToken },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (data.success) {
+                console.log("FCM Token saved on server successfully.");
+            } else {
+                console.warn("Failed to save FCM Token on server:", data.message);
+            }
+        } catch (error) {
+            console.error("Error saving FCM Token on server:", error.message);
+        }
+    };
+
     // Fetch User's Data if User is Logged In
     useEffect(() => {
         if (user) {
             fetchUserData()
             fetchUserEnrolledCourses()
+            fetchNotifications()
         }
     }, [user])
+
+    // Request & Sync FCM Token when userData is available
+    useEffect(() => {
+        if (userData) {
+            const setupNotifications = async () => {
+                const token = await requestForToken();
+                if (token && token !== userData.fcmToken) {
+                    await updateUserFcmToken(token);
+                }
+            };
+            setupNotifications();
+        }
+    }, [userData]);
+
+    // Handle Foreground Notifications
+    useEffect(() => {
+        const messaging = getFirebaseMessaging();
+        if (!messaging) return; // FCM not available, skip gracefully
+
+        const unsubscribe = onMessage(messaging, (payload) => {
+            console.log("Foreground message received:", payload);
+            toast.info(
+                <div>
+                    <strong>{payload.notification.title}</strong>
+                    <p>{payload.notification.body}</p>
+                </div>,
+                { autoClose: 5000 }
+            );
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, []);
 
     const value = {
         showLogin, setShowLogin,
@@ -153,7 +229,10 @@ export const AppContextProvider = (props) => {
         enrolledCourses, fetchUserEnrolledCourses,
         calculateChapterTime, calculateCourseDuration,
         calculateRating, calculateNoOfLectures,
-        isEducator,setIsEducator
+        isEducator,setIsEducator,
+        notifications, setNotifications,
+        unreadCount, setUnreadCount,
+        fetchNotifications
     }
 
     return (

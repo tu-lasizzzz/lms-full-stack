@@ -6,7 +6,6 @@ import axios from 'axios';
 import { AppContext } from '../../context/AppContext';
 import { toast } from 'react-toastify';
 import humanizeDuration from 'humanize-duration'
-import YouTube from 'react-youtube';
 import { useAuth } from '@clerk/clerk-react';
 import Loading from '../../components/student/Loading';
 
@@ -146,7 +145,7 @@ const CourseDetails = () => {
                             <p>{lecture.lectureTitle}</p>
                             <div className='flex gap-2'>
                               {lecture.isPreviewFree && <p onClick={() => setPlayerData({
-                                videoId: lecture.lectureUrl.split('/').pop()
+                                videoUrl: lecture.lectureUrl
                               })} className='text-blue-500 cursor-pointer'>Preview</p>}
                               <p>{humanizeDuration(lecture.lectureDuration * 60 * 1000, { units: ['h', 'm'] })}</p>
                             </div>
@@ -170,7 +169,7 @@ const CourseDetails = () => {
         <div className="max-w-course-card z-10 shadow-custom-card rounded-t md:rounded-none overflow-hidden bg-white min-w-[300px] sm:min-w-[420px]">
           {
             playerData
-              ? <YouTube videoId={playerData.videoId} opts={{ playerVars: { autoplay: 1 } }} iframeClassName='w-full aspect-video' />
+              ? <video className='w-full aspect-video' controls autoPlay src={playerData.videoUrl}></video>
               : <img src={courseData.courseThumbnail} alt="" />
           }
           <div className="p-5">

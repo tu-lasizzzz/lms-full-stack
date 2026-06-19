@@ -8,6 +8,9 @@ import { clerkMiddleware } from '@clerk/express'
 import { clerkWebhooks, stripeWebhooks } from './controllers/webhooks.js'
 import educatorRouter from './routes/educatorRoutes.js'
 import courseRouter from './routes/courseRoute.js'
+import notificationRouter from './routes/notificationRoutes.js'
+import './configs/firebase.js'
+import { swaggerDocs } from './configs/swagger.js'
 
 // Initialize Express
 const app = express()
@@ -20,16 +23,20 @@ await connectCloudinary()
 app.use(cors())
 app.use(clerkMiddleware())
 
+// Port
+const PORT = process.env.PORT || 5000
+
 // Routes
-app.get('/', (req, res) => res.send("API Working"))
+app.get('/', (req, res) => res.json({ message: `Server running on port ${PORT}` }))
 app.post('/clerk', express.json() , clerkWebhooks)
 app.post('/stripe', express.raw({ type: 'application/json' }), stripeWebhooks)
 app.use('/api/educator', express.json(), educatorRouter)
 app.use('/api/course', express.json(), courseRouter)
 app.use('/api/user', express.json(), userRouter)
+app.use('/api/notifications', express.json(), notificationRouter)
 
-// Port
-const PORT = process.env.PORT || 5000
+// Swagger API Documentation
+swaggerDocs(app)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

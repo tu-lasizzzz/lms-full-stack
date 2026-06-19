@@ -11,6 +11,11 @@ const userSchema = new mongoose.Schema({
             ref: 'Course'
         }
     ],
+    fcmToken: { type: String, default: null },
+    password: { type: String }, // For mock seeded users
+    role: { type: String, enum: ['student', 'educator', 'admin'], default: 'student' },
+    bio: { type: String },
+    isSeedData: { type: Boolean, default: false }
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
